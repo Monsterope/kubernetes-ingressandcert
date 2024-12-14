@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  namespace: devopstesting
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "9999"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "9999"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - testing.domain.com # domain หรือ sub domain ที่เราต้องการเข้า ssl
+      secretName: testing-api # ตั้งชื่อ secret name ของ ssl
+  rules:
+    - host: testing.domain.com # ชื่อที่เราต้องการใช้งาน
+      http:
+        paths: 
+          - path: /api/product
+            pathType: Prefix
+            backend:
+              service:
+                name: manage-product-service # มาจาก service ที่อยู่ในไฟล์ชื่อ product-template-deployment.yaml
+                port:
+                  number: 8000  
+          - path: /api/user
+            pathType: Prefix
+            backend:
+              service:
+                name: manage-user-service # มาจาก service ที่อยู่ในไฟล์ชื่อ user-template-deployment.yaml
+                port:
+                  number: 8000   

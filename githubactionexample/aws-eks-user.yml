@@ -1,0 +1,80 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: DeploymentUser
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'manage_user_service/**'
+      - 'Infras/prod/user-template-deployment.yaml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'manage_user_service/**'
+
+env: 
+  TAG_VER: ${{ github.run_number }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+  DB_USER_HOST: ${{ secrets.DB_USER_HOST }}
+  DB_USER_PORT: ${{ secrets.DB_USER_PORT }}
+  DB_USER_USERNAME: ${{ secrets.DB_USER_USERNAME }}
+  DB_USER_PASSWORD: ${{ secrets.DB_USER_PASSWORD }}
+
+  LABGIT_TOKEN: ${{ secrets.LABGIT_TOKEN }}
+  LABGIT_ORIGIN: ${{ secrets.LABGIT_ORIGIN }}
+  LABGIT_PATH: ${{ secrets.LABGIT_PATH }}
+  LABGIT_REPO_USER: ${{ secrets.LABGIT_REPO_USER }}
+  LABGIT_USER: ${{ secrets.LABGIT_USER }}
+  LABGIT_EMAIL: ${{ secrets.LABGIT_EMAIL }}
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-southeast-1
+
+    - name: Docker Login
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+    - name: USER Build container image 
+      working-directory: ./manage_user_service
+      run: docker build -t thundersoftware/lotto-user-service:$TAG_VER -f dockerfile .
+
+    - name: USER Push image to Docker Hub
+      run: docker push thundersoftware/lotto-user-service:$TAG_VER
+
+    - name: Update kube Config
+      run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region ap-southeast-1
+
+    # มีการ push เข้า gitlab ที่เป็นตั้ง server เอง
+    - name: Configure YAML For kube and apply
+      # working-directory: ./Infras/prod
+      run: |
+        envsubst < user-template-deployment.yaml > user-deploy.yaml
+        kubectl apply -f user-deploy.yaml
+        git config --global user.email "$LABGIT_EMAIL"
+        git config --global user.name "$LABGIT_USER"
+        git clone https://oauth2:$LABGIT_TOKEN@$LABGIT_ORIGIN/$LABGIT_PATH/$LABGIT_REPO_USER.git
+        cp user-deploy.yaml $LABGIT_REPO_USER/user-deploy.yaml
+        cd $LABGIT_REPO_USER
+        git remote add $LABGIT_REPO_USER https://oauth2:$LABGIT_TOKEN@$LABGIT_ORIGIN/$LABGIT_PATH/$LABGIT_REPO_USER.git
+        git remote update
+        git add user-deploy.yaml
+        git commit -am "new version service user $TAG_VER"
+        git push origin main
+

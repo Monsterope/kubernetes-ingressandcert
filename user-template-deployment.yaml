@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manage-user-deployment
+  namespace: devopstesting # Kubernete namespace
+spec:
+  replicas: 4 # อารมณ์เหมือนกระจายโหลด หรือ load balancer
+  selector:
+    matchLabels:
+      app: manage-user
+  template:
+    metadata:
+      labels:
+        app: manage-user
+    spec:
+      nodeSelector:
+        prod: "true"  # คือ key ที่เรากำหนดตอนสร้าง nodegroup บน aws (Kubernete label)
+      containers:
+        - name: manage-user
+          image: devopstest/user-service:$TAG_VER
+          # imagePullPolicy: Always # คือการบอกว่าเราจะดึง image มาใหม่ทุกครั้งที่ deploy
+          resources:
+            requests:
+              memory: "512Mi"  # ตั้งค่า Memory ขั้นต่ำ
+              cpu: "512m"      # ตั้งค่า CPU ขั้นต่ำ
+            limits:
+              memory: "512Mi"  # ตั้งค่าขีดจำกัดสูงสุดของ Memory
+              cpu: "512m"      # ตั้งค่าขีดจำกัดสูงสุดของ CPU
+          env:
+            - name: DB_HOST
+              value: "$DB_USER_HOST"
+            - name: DB_PORT
+              value: "$DB_USER_PORT"
+            - name: DB_DATABASE
+              value: "product_service"
+            - name: DB_USERNAME
+              value: "$DB_USER_USERNAME"
+            - name: DB_PASSWORD
+              value: "$DB_USER_PASSWORD"
+      imagePullSecrets:
+        - name: devops-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: manage-user-service
+  namespace: devopstesting # Kubernete namespace
+spec:
+  selector:
+    app: manage-user
+  ports:
+    - protocol: TCP
+      port: 8000 # port ที่ต้องการเปิด
+      targetPort: 8050 # port ของ container ที่เชื่อมต่อ เหมือน docker run 8000:8050
+  type: ClusterIP
