@@ -53,10 +53,10 @@ jobs:
 
     - name: USER Build container image 
       working-directory: ./manage_user_service
-      run: docker build -t thundersoftware/lotto-user-service:$TAG_VER -f dockerfile .
+      run: docker build -t devopstest/lotto-user-service:$TAG_VER -f dockerfile .
 
     - name: USER Push image to Docker Hub
-      run: docker push thundersoftware/lotto-user-service:$TAG_VER
+      run: docker push devopstest/lotto-user-service:$TAG_VER
 
     - name: Update kube Config
       run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region ap-southeast-1
