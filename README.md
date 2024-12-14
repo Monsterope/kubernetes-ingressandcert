@@ -60,13 +60,12 @@ cert-manager jetstack/cert-manager \
 kubectl apply -f user-template-deployment.yaml
 ```
 
-- Apply User deployment and service
+- Apply Product deployment and service
 ```
-kubectl apply -f user-template-deployment.yaml
+kubectl apply -f product-template-deployment.yaml
 ```
 
 - Apply Ingress (***Warning: First apply ingress so next apply cert***)
-  - Warning: First apply ingress so next apply cert
 ```
 kubectl apply -f ingress-srv.yml
 ```
