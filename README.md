@@ -61,7 +61,8 @@ File Example Kubernete and git action workflows
     - AmazonEKSVPCResourceController **
     - CloudWatchFullAccess **
     - eksctl-attractive-monster-1663593568-cluster-PolicyCloudWatchMetrics **
-      - {
+      ``` Policy
+      {
           "Version": "2012-10-17",
           "Statement": [
               {
@@ -73,8 +74,10 @@ File Example Kubernete and git action workflows
               }
           ]
       }
+      ```
     - eksctl-attractive-monster-1663593568-cluster-PolicyELBPermissions **
-      - {
+      ``` Policy
+      {
           "Version": "2012-10-17",
           "Statement": [
               {
@@ -88,13 +91,15 @@ File Example Kubernete and git action workflows
               }
           ]
       }
+      ```
   - node-group
     - AmazonEC2ContainerRegistryReadOnly
     - AmazonEKS_CNI_Policy
     - AmazonEKSWorkerNodePolicy
     - AmazonSSMManagedInstanceCore
     - certManagerDNS **
-      - {
+      ``` Policy
+      {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -116,7 +121,8 @@ File Example Kubernete and git action workflows
                 "Resource": "*"
             }
         ]
-    }
+      }
+      ```
   - For manage and action CI/CD
     - AmazonEBSCSIDriverPolicy
     - AmazonEC2ContainerRegistryFullAccess
