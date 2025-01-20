@@ -53,10 +53,10 @@ jobs:
 
     - name: PRODUCT Build container image 
       working-directory: ./product_service
-      run: docker build -t devopstest/lotto-product-service:$TAG_VER -f dockerfile .
+      run: docker build -t devopstest/product-service:$TAG_VER -f dockerfile .
 
     - name: PRODUCT Push image to Docker Hub
-      run: docker push devopstest/lotto-product-service:$TAG_VER
+      run: docker push devopstest/product-service:$TAG_VER
 
     - name: Update kube Config
       run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region ap-southeast-1
